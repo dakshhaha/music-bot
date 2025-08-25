@@ -1,6 +1,27 @@
-addEventListener('fetch', event => {
-  event.respondWith(handleRequest(event.request));
+import http from "http";
+
+const server = http.createServer(async (req, res) => {
+  try {
+    let body = "";
+    req.on("data", chunk => (body += chunk));
+    req.on("end", async () => {
+      const response = await handleRequest({
+        method: req.method,
+        json: async () => (body ? JSON.parse(body) : {}),
+      });
+
+      res.writeHead(response.status || 200, { "Content-Type": "text/plain" });
+      res.end("OK");
+    });
+  } catch (err) {
+    console.error("Server error:", err);
+    res.writeHead(500);
+    res.end("Internal Server Error");
+  }
 });
+
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => console.log(`Bot running on port ${PORT}`));
 
 // Add your bot token here.
 const BOT_TOKEN = "8067515574:AAGcv8onUf5aR2Vguf4b1wFeurfVrtyegY4";
